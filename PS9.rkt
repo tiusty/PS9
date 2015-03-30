@@ -69,10 +69,10 @@
 ; buildings lft (left) and rgt (right).
 
 (define lego1 (make-lego 1 'blue 2))
-(define lego2 (make-lego 2 'blue 4))
-(define lego3 (make-lego 3 'blue 4))
+(define lego2 (make-lego 2 'green 4))
+(define lego3 (make-lego 3 'red 4))
 (define lego4 (make-lego 4 'blue 5))
-(define lego5 (make-lego 5 'blue 3))
+(define lego5 (make-lego 5 'red 3))
 (define Bldg1 (make-bigger lego3 lego2 lego1))
 (define Bldg2 (make-bigger lego4 Bldg1 lego5))
 
@@ -88,6 +88,66 @@
     [else 
      (+ 1 (count-bricks (bigger-left LegoB)) (count-bricks (bigger-right LegoB)))]))
 
+;***********************************************************************************8
+; Problem 3
+
+; Purpose: 
+; Determine how high a lego building is
+; LegoBlg -> Number
+(check-expect (how-high Bldg2) 30)
+(check-expect (how-high Bldg1) 20)
+
+(define (how-high LegoB)
+  (cond
+    [(lego? LegoB) 10]
+    [(bigger? LegoB) 
+     (+ 10 (cond
+             [(> (how-high (bigger-left LegoB)) (how-high (bigger-right LegoB)))
+              (how-high (bigger-left LegoB))]
+             [else
+              (how-high (bigger-right LegoB))]))]))
+
+;**************************************************************************************8
+; Problem 4
+
+; Purpose: 
+; takes a lego building and a color
+; and determines whether the buliding contains a lego
+; brick of the given color
+; Legoblg Symbol -> Boolean
+(check-expect (contains-colored-brick? Bldg2 'red) true)
+(check-expect (contains-colored-brick? Bldg2 'purple) false)
+(check-expect (contains-colored-brick? Bldg1 'blue) true)
+
+(define (contains-colored-brick? LegoB aColor)
+  (cond
+    [(lego? LegoB)
+     (symbol=? aColor (lego-color LegoB))]
+    [(bigger? LegoB)
+     (or (contains-colored-brick? (bigger-left LegoB) aColor)
+         (contains-colored-brick? (bigger-right LegoB) aColor))]))
+
+;***********************************************************************************
+; Problem 5
+
+; A MaybeLego is one of:
+; - false
+; - Lego
 
 ; Purpose:
+; takes a lego building and a color and finds
+; any lego with the given color in the building, or returns false if 
+; there are no such legos
+; LegoBld Symbol -> MaybeLego
+
+(check-expect (find-colored-brick? Bldg2 'red) (make-lego 3 'red 4))
+(check-expect (find-colored-brick? Bldg2 'purple) false)
+(check-expect (find-colored-brick? Bldg1 'blue) (make-lego 1 'blue 2))
+
+(define (find-colored-brick? LegoB aColor)
+  (cond
+    [(symbol=? aColor (lego-color LegoB))
+     LegoB]
+    [(bigger? LegoB)
+     (find-colored-brick? 
 
