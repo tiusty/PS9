@@ -1,6 +1,8 @@
 ;; Problem Set 10
 ; Alex Agudelo & Jesse Bates
 
+(require 2htdp/image)
+
 ;****************************************************************
 ; Problem 1
 
@@ -140,14 +142,51 @@
 ; there are no such legos
 ; LegoBld Symbol -> MaybeLego
 
-(check-expect (find-colored-brick? Bldg2 'red) (make-lego 3 'red 4))
-(check-expect (find-colored-brick? Bldg2 'purple) false)
-(check-expect (find-colored-brick? Bldg1 'blue) (make-lego 1 'blue 2))
+#;(check-expect (find-colored-brick? Bldg2 'red) (make-lego 3 'red 4))
+#;(check-expect (find-colored-brick? Bldg2 'purple) false)
+#;(check-expect (find-colored-brick? Bldg1 'blue) (make-lego 1 'blue 2))
 
-(define (find-colored-brick? LegoB aColor)
+#;(define (find-colored-brick? LegoB aColor)
+  (filter (local (;is true if the lego is found
+                  ;with the same color and returns 
+                  ;it to a list
+                  (define (brickFound? LegoB aColor)
+                    (cond
+                      [()]))))))
+
+
+
+
+;*****************************************************************************
+; Problem 6
+
+(define Bldg3 (make-bigger (make-lego 4 'purple 80)
+             (make-bigger (make-lego 2 'blue 60)
+                          (make-lego 1 'yellow 40)
+                          (make-lego 3 'red 40))
+             (make-bigger (make-lego 6 'orange 60)
+                          (make-lego 5 'green 40)
+                          (make-lego 7 'red 40))))
+; Purpose:
+; Takes a lego building and prduces an image of the building
+; LegoBld -> Image
+
+(define (lb->image LegoB)
   (cond
-    [(symbol=? aColor (lego-color LegoB))
-     LegoB]
-    [(bigger? LegoB)
-     (find-colored-brick? 
+    [(empty? LegoB) (empty-scene 50 50)]
+    [(lego? LegoB) (lego->image LegoB)]
+    [(bigger?  LegoB)
+     (overlay  (above/align "center" (beside/align "bottom" (lego->image (bigger-lego LegoB)) (lb->image (bigger-right LegoB)))
+               (beside/align "bottom" (lego->image (bigger-lego LegoB)) (lb->image (bigger-left LegoB))))]))
+                                               
+; Purpose:
+; Takes a lego and produces an image of it
+; Lego -> Image
+(check-expect (lego->image lego1) (rectangle 2 10 'solid 'blue))
+(check-expect (lego->image lego2) (rectangle 4 10 'solid 'green))
+
+(define (lego->image a-lego)
+  (rectangle (lego-width a-lego) 10 'solid (lego-color a-lego)))
+
+
 
