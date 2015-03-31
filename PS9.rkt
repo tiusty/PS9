@@ -61,6 +61,11 @@
 ;    (make-lego Number Symbol Number)
 ; interpretation: (make-lego l c w) is the lego brick
 ; with label l, color c, and width w (in pixels).
+
+#;(define (lego-tmpl a-lego)
+    ... (lego-label a-lego) ...
+    ... (lego-color a-lego) ...
+    ... (lego-width a-lego) ...)
  
 (define-struct bigger (lego left right))
 ; A LegoBldg (lego building) is one of:
@@ -70,6 +75,11 @@
 ; lego building by putting a lego brick l on top of two lego
 ; buildings lft (left) and rgt (right).
 
+#;(define (bigger-tmpl a-bigger)
+    ... (bigger-lego a-bigger) ...
+    ... (bigger-left a-bigger) ...
+    ... (bigger-right a-bigger) ...)
+
 (define lego1 (make-lego 1 'blue 2))
 (define lego2 (make-lego 2 'green 4))
 (define lego3 (make-lego 3 'red 4))
@@ -77,6 +87,7 @@
 (define lego5 (make-lego 5 'red 3))
 (define Bldg1 (make-bigger lego3 lego2 lego1))
 (define Bldg2 (make-bigger lego4 Bldg1 lego5))
+(define Bldg4 (make-bigger lego4 lego3 Bldg1))
 
 ; Purpose:
 ; Counts the total number of lego bricks in the building
@@ -142,19 +153,30 @@
 ; there are no such legos
 ; LegoBld Symbol -> MaybeLego
 
-#;(check-expect (find-colored-brick? Bldg2 'red) (make-lego 3 'red 4))
-#;(check-expect (find-colored-brick? Bldg2 'purple) false)
-#;(check-expect (find-colored-brick? Bldg1 'blue) (make-lego 1 'blue 2))
+(check-expect (find-colored-brick? Bldg2 'red) (make-lego 5 'red 3))
+(check-expect (find-colored-brick? Bldg2 'purple) false)
+(check-expect (find-colored-brick? Bldg1 'blue) (make-lego 1 'blue 2))
+(check-expect (find-colored-brick? empty 'blue) false)
+(check-expect (find-colored-brick? Bldg2 'blue) (make-lego 4 'blue 5))
+(check-expect (find-colored-brick? Bldg4 'blue) (make-lego 4 'blue 5))
 
-#;(define (find-colored-brick? LegoB aColor)
-  (filter (local (;is true if the lego is found
-                  ;with the same color and returns 
-                  ;it to a list
-                  (define (brickFound? LegoB aColor)
-                    (cond
-                      [()]))))))
-
-
+(define (find-colored-brick? LegoB aColor)
+  (cond 
+    [(empty? LegoB) false]
+    [(lego? LegoB) (if (symbol=? aColor (lego-color LegoB)) 
+                       LegoB
+                       false)]
+    [(bigger? LegoB)
+     (if (symbol=? aColor (lego-color (bigger-lego LegoB)))
+         (bigger-lego LegoB)
+         (cond
+           [(lego? (find-colored-brick? (bigger-right LegoB) aColor))
+            (bigger-right LegoB)]
+           [(lego? (find-colored-brick? (bigger-left LegoB) aColor))
+            (bigger-left LegoB)]
+           [else 
+            (or (find-colored-brick? (bigger-left LegoB) aColor)
+                (find-colored-brick? (bigger-right LegoB) aColor))]))])) 
 
 
 ;*****************************************************************************
@@ -171,13 +193,13 @@
 ; Takes a lego building and prduces an image of the building
 ; LegoBld -> Image
 
-(define (lb->image LegoB)
+#;(define (lb->image LegoB)
   (cond
     [(empty? LegoB) (empty-scene 50 50)]
     [(lego? LegoB) (lego->image LegoB)]
     [(bigger?  LegoB)
      (overlay  (above/align "center" (beside/align "bottom" (lego->image (bigger-lego LegoB)) (lb->image (bigger-right LegoB)))
-               (beside/align "bottom" (lego->image (bigger-lego LegoB)) (lb->image (bigger-left LegoB))))]))
+               (beside/align "bottom" (lego->image (bigger-lego LegoB)) (lb->image (bigger-left LegoB)))))]))
                                                
 ; Purpose:
 ; Takes a lego and produces an image of it
