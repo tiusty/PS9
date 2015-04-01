@@ -1,5 +1,5 @@
 ;; Problem Set 10
-; Alex Agudelo & Jesse Bates
+; Alex Agudelo 
 
 (require 2htdp/image)
 
@@ -33,10 +33,17 @@
     [(empty? sexp) ""]
     [(atom? (first sexp))
      (cond
-       [(number? (first sexp)) (string-append " " (number->string (first sexp)) (sexp->stringBase (rest sexp)))]
-       [(symbol? (first sexp)) (string-append " " (symbol->string (first sexp)) (sexp->stringBase (rest sexp)))]
-       [(string? (first sexp)) (string-append " \"" (first sexp) "\"" (sexp->stringBase (rest sexp)))])]
-    [(list? (first sexp)) (string-append " (" (sexp->stringBase (first sexp)) " )" (sexp->stringBase (rest sexp)))]))
+       [(number? (first sexp)) 
+        (string-append " " (number->string (first sexp))
+                       (sexp->stringBase (rest sexp)))]
+       [(symbol? (first sexp)) 
+        (string-append " " (symbol->string (first sexp)) 
+                       (sexp->stringBase (rest sexp)))]
+       [(string? (first sexp)) 
+        (string-append " \"" (first sexp) "\"" 
+                       (sexp->stringBase (rest sexp)))])]
+    [(list? (first sexp)) (string-append " (" (sexp->stringBase (first sexp)) " )" 
+                                         (sexp->stringBase (rest sexp)))]))
 
 ; Purpose:
 ; Determine if a given expression is an atom or not
@@ -80,11 +87,11 @@
     ... (bigger-left a-bigger) ...
     ... (bigger-right a-bigger) ...)
 
-(define lego1 (make-lego 1 'blue 2))
-(define lego2 (make-lego 2 'green 4))
-(define lego3 (make-lego 3 'red 4))
-(define lego4 (make-lego 4 'blue 5))
-(define lego5 (make-lego 5 'red 3))
+(define lego1 (make-lego 1 'blue 40))
+(define lego2 (make-lego 2 'green 40))
+(define lego3 (make-lego 3 'red 40))
+(define lego4 (make-lego 4 'blue 50))
+(define lego5 (make-lego 5 'red 30))
 (define Bldg1 (make-bigger lego3 lego2 lego1))
 (define Bldg2 (make-bigger lego4 Bldg1 lego5))
 (define Bldg4 (make-bigger lego4 lego3 Bldg1))
@@ -99,7 +106,8 @@
   (cond
     [(lego? LegoB) 1]
     [else 
-     (+ 1 (count-bricks (bigger-left LegoB)) (count-bricks (bigger-right LegoB)))]))
+     (+ 1 (count-bricks (bigger-left LegoB)) 
+        (count-bricks (bigger-right LegoB)))]))
 
 ;***********************************************************************************8
 ; Problem 3
@@ -153,12 +161,12 @@
 ; there are no such legos
 ; LegoBld Symbol -> MaybeLego
 
-(check-expect (find-colored-brick? Bldg2 'red) (make-lego 5 'red 3))
+(check-expect (find-colored-brick? Bldg2 'red) (make-lego 5 'red 30))
 (check-expect (find-colored-brick? Bldg2 'purple) false)
-(check-expect (find-colored-brick? Bldg1 'blue) (make-lego 1 'blue 2))
+(check-expect (find-colored-brick? Bldg1 'blue) (make-lego 1 'blue 40))
 (check-expect (find-colored-brick? empty 'blue) false)
-(check-expect (find-colored-brick? Bldg2 'blue) (make-lego 4 'blue 5))
-(check-expect (find-colored-brick? Bldg4 'blue) (make-lego 4 'blue 5))
+(check-expect (find-colored-brick? Bldg2 'blue) (make-lego 4 'blue 50))
+(check-expect (find-colored-brick? Bldg4 'blue) (make-lego 4 'blue 50))
 
 (define (find-colored-brick? LegoB aColor)
   (cond 
@@ -184,31 +192,107 @@
 
 (define Bldg3 (make-bigger (make-lego 4 'purple 80)
              (make-bigger (make-lego 2 'blue 60)
-                          (make-lego 1 'yellow 40)
+                          (make-lego 1 'black 40)
                           (make-lego 3 'red 40))
              (make-bigger (make-lego 6 'orange 60)
                           (make-lego 5 'green 40)
                           (make-lego 7 'red 40))))
+(define Bldg5 (make-bigger (make-lego 4 'purple 80)
+             (make-bigger (make-lego 2 'blue 60)
+                          (make-lego 1 'yellow 40)
+                          (make-lego 3 'red 40))
+             (make-lego 6 'orange 60)))
+(define HH 200)
+(define WW 200)
+(define BG (empty-scene HH WW))
+
+
+; Purpose:
+; Takes a lego and produces an image of it
+; Lego -> Image
+(check-expect (lego->image lego1) (rectangle 40 10 'solid 'blue))
+(check-expect (lego->image lego2) (rectangle 40 10 'solid 'green))
+
+(define (lego->image a-lego)
+  (rectangle (lego-width a-lego) 10 'solid (lego-color a-lego)))
+
+; Purpose:
+; Call the lb->imageBase function
+; LegoB -> Image
+(define (lb->image LegoB)
+  (lb->imageBase LegoB (/ WW 2) (/ HH 2) BG))
+
 ; Purpose:
 ; Takes a lego building and prduces an image of the building
 ; LegoBld -> Image
 
-#;(define (lb->image LegoB)
-  (cond
-    [(empty? LegoB) (empty-scene 50 50)]
-    [(lego? LegoB) (lego->image LegoB)]
+(define (lb->imageBase LegoB x y img)
+  (local (; blah
+          (define (difference LegoB)
+            (- (+ (- x (/ (lego-width (bigger-lego LegoB)) 2)) 
+                  (/ (lego-width (bigger-left LegoB)) 2))
+               (- (+ x (/ (lego-width (bigger-lego LegoB)) 2)) 
+                  (/ (lego-width (bigger-right LegoB)) 2))))
+          (define (placeLeft LegoB x y img)
+            (cond
+              [(lego? (bigger-left LegoB))
+               (lb->imageBase 
+                (bigger-left LegoB) 
+                (cond
+                  [(> (+ (- x (/ (lego-width (bigger-lego LegoB)) 2)) 
+                         (/ (lego-width (bigger-left LegoB)) 2))
+                      (- (+ x (/ (lego-width (bigger-lego LegoB)) 2)) 
+                         (/ (lego-width (bigger-right LegoB)) 2)))
+                   (- (+ (- x (/ (lego-width (bigger-lego LegoB)) 2)) 
+                         (lego-width (bigger-left LegoB))) 
+                      (/ (difference LegoB) 2))]
+                  [else
+                   (- x (/ (lego-width (bigger-lego LegoB)) 2))]) 
+                (+ y 10) img)]
+              [(bigger? (bigger-left LegoB))
+               (lb->imageBase (bigger-left LegoB) 
+                              (- x (/ (lego-width 
+                                       (bigger-lego (bigger-left LegoB))) 2)) 
+                              (+ y 10) img)])) 
+          (define (placeRight LegoB x y img)
+            (cond
+              [(lego? (bigger-right LegoB))
+               (lb->imageBase (bigger-right LegoB) 
+                              (cond
+                                [(< (- (+ x (/ (lego-width (bigger-lego LegoB))
+                                               2)) 
+                                       (/ (lego-width (bigger-right LegoB)) 2))
+                                    (+ (- x (/ (lego-width (bigger-lego LegoB))
+                                               2)) 
+                                       (/ (lego-width 
+                                           (cond
+                                             [(lego? (bigger-left LegoB))
+                                              (bigger-left LegoB)]
+                                             [(bigger? (bigger-left LegoB))
+                                              (bigger-lego 
+                                               (bigger-left LegoB))])) 
+                                          2)))
+                                 (+ (+ x (/ (lego-width (bigger-lego LegoB)) 2)) 
+                                    (/ (difference LegoB) 2))]
+                                [else 
+                                 (+ x (/ (lego-width (bigger-lego LegoB)) 2))]) 
+                              (+ y 10) img)]
+              [(bigger? LegoB)
+               (lb->imageBase (bigger-right LegoB) 
+                              (+ x (/ (lego-width (bigger-lego 
+                                                   (bigger-right LegoB))) 2)) 
+                              (+ y 10) img)]))) 
+    (cond
+      [(empty? LegoB) BG]
+      [(lego? LegoB) (place-image (lego->image LegoB) x y img)]
     [(bigger?  LegoB)
-     (overlay  (above/align "center" (beside/align "bottom" (lego->image (bigger-lego LegoB)) (lb->image (bigger-right LegoB)))
-               (beside/align "bottom" (lego->image (bigger-lego LegoB)) (lb->image (bigger-left LegoB)))))]))
-                                               
-; Purpose:
-; Takes a lego and produces an image of it
-; Lego -> Image
-(check-expect (lego->image lego1) (rectangle 2 10 'solid 'blue))
-(check-expect (lego->image lego2) (rectangle 4 10 'solid 'green))
+     (place-image (lego->image (bigger-lego LegoB)) x y 
+                  (placeRight LegoB x y 
+                             (placeLeft LegoB x y img)))])))
 
-(define (lego->image a-lego)
-  (rectangle (lego-width a-lego) 10 'solid (lego-color a-lego)))
+(lb->image Bldg3)
+                                               
+
 
 
 
